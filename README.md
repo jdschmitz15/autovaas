@@ -1,6 +1,13 @@
-Auto vaas provides a progamable way to create or delete VaaS instances.   The program uses a json file in the format as follows to create or delete an instance.
+# Auto VaaS tool
 
-{
+## Description 
+
+Auto vaas provides a progammable way to create or delete VaaS instances.   The program uses a json file with the following format to create or delete an instance.  
+
+Delete only needs instance_name and delete_password.  All other variables are ignored
+
+[
+	{
 		"instance_name":         "DeleteMe123",
 		"owner_first_name":      "Brian",
 		"owner_last_name":       "Pitta",
@@ -17,3 +24,9 @@ Auto vaas provides a progamable way to create or delete VaaS instances.   The pr
 		"login_server":          "",
 		"clear_existing":        "true",
 	}
+]
+
+## Documentation
+Run `autovaas create <json file>` to create one or more instances.
+
+Run `autovaas delete <json file>` to delete one or more instances.
