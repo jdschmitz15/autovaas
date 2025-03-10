@@ -1,0 +1,36 @@
+[
+    {
+      "instance_name": "JeffAuto1",
+      "owner_first_name": "Jeff",
+      "owner_last_name": "Schmitz",
+      "email": "jeff.schmitz@illumio.com",
+      "delete_password": "deletepassword",
+      "conf_delete_password": "deletepassword",
+      "management_server": "poc3.illum.io:443",
+      "soutbound_api_version": "26",
+      "unpair_existing": "true",
+      "user": "api_147a4049a161912aa",
+      "pce_password": "95f08013fa9a02480e7193b35bbe99be20562e2bde520201c1089166e5298abe",
+      "conf_pce_password": "95f08013fa9a02480e7193b35bbe99be20562e2bde520201c1089166e5298abe",
+      "org": "3998757",
+      "login_server": "",
+      "clear_existing": "true"
+    },
+    {
+        "instance_name": "JeffAuto2",
+        "owner_first_name": "Jeff",
+        "owner_last_name": "Schmitz",
+        "email": "jeff.schmitz@illumio.com",
+        "delete_password": "deletepassword",
+        "conf_delete_password": "deletepassword",
+        "management_server": "poc3.illum.io:443",
+        "soutbound_api_version": "26",
+        "unpair_existing": "true",
+        "user": "api_147a4049a161912aa",
+        "pce_password": "95f08013fa9a02480e7193b35bbe99be20562e2bde520201c1089166e5298abe",
+        "conf_pce_password": "95f08013fa9a02480e7193b35bbe99be20562e2bde520201c1089166e5298abe",
+        "org": "3998758",
+        "login_server": "",
+        "clear_existing": "true"
+      }
+  ]
