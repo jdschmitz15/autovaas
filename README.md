@@ -8,12 +8,12 @@ Delete only needs instance_name and delete_password.  All other variables are ig
 
 [
 	{
-		"instance_name":         "DeleteMe123",
-		"owner_first_name":      "Brian",
-		"owner_last_name":       "Pitta",
-		"email":                 "brian.pitta@illumio.com",
-		"delete_password":       "deletepassword",
-		"conf_delete_password":  "deletepassword",
+		"instance_name":         "Mytest",
+		"owner_first_name":      "Jeff",
+		"owner_last_name":       "Schmitz",
+		"email":                 "jeff.schmitz@illumio.com",
+		"delete_password":       "mypassword",
+		"conf_delete_password":  "mypassword",
 		"management_server":     "pce.com:855",
 		"soutbound_api_version": "26",
 		"unpair_existing":       "true",
