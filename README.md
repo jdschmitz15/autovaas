@@ -23,7 +23,8 @@ Delete only needs instance_name and delete_password.  All other variables are ig
 		"org":                   "4",
 		"login_server":          "",
 		"clear_existing":        "true",
-	}
+	},
+	{ <additional instances>}
 ]
 
 ## Documentation
