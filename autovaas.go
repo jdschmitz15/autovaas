@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 )
@@ -35,48 +35,105 @@ type LabInstance struct {
 	ClearExisting       string `json:"clear_existing"`
 }
 
+var dirPath string
+var clean bool = false
+
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: autovaas <create|delete> <path to JSON file>")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: autovaas <create|delete|clean> [<path to JSON file>] [--dir <directory path>]")
 		return
 	}
 
+	//make sure the we can run clean,create, and delete as well as create with files in the directory.
 	action := os.Args[1]
-	jsonFilePath := os.Args[2]
 
 	switch action {
 	case "create":
-		createInstance(jsonFilePath)
+		if len(os.Args) == 3 {
+			// Case: create <jsonfile>
+			jsonFilePath := os.Args[2]
+			createInstance(jsonFilePath)
+
+			//if --dir added to command line look for files in the directory that match the requires vensim files.  Upload those instead of using defaults
+		} else if len(os.Args) == 5 && os.Args[3] == "--dir" {
+			// Case: create --dir <directory>
+			jsonFilePath := os.Args[2]
+			dirPath = os.Args[4]
+			createInstance(jsonFilePath)
+		} else {
+			fmt.Println("Usage: autovaas create <jsonfile> or autovaas create --dir <directory path>")
+			return
+		}
 	case "delete":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: autovaas delete <path to JSON file>")
+			return
+		}
+		jsonFilePath := os.Args[2]
 		deleteInstance(jsonFilePath)
+		//clean will first delete the VaaS instance and then re-add using empty files to clean all existing data off the PCE
+	case "clean":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: autovaas clean <path to JSON file>")
+			return
+		}
+		jsonFilePath := os.Args[2]
+		clean = true
+		//This removes the instance on VaaS and re-adds with empty files.
+		deleteInstance(jsonFilePath)
+		createInstance(jsonFilePath)
 	default:
-		fmt.Println("Invalid action. Use 'create' or 'delete'.")
+		fmt.Println("Invalid action. Use 'create', 'delete', or 'clean'.")
 	}
+
 }
 
 func prepareInstance(url string, instances []LabInstance) {
 
+	fileNames := []string{"vens.csv", "processes.csv", "traffic.csv", "wklds.csv", "iplists.csv", "svcs.csv",
+		"svcs_meta.csv", "labeldimensions.csv", "labels.csv", "rulesets.csv", "rules.csv",
+		"denyrules.csv", "adgroups.csv"}
+
 	for _, instance := range instances {
+
+		//Get the list of files in the directory that match the filenames above
+		if dirPath != "" {
+			fileNames = getFiles(dirPath, fileNames)
+		}
+
+		//If clean is false and no --dir then send no files which causes VaaS to use default file.
+		if !clean && dirPath == "" {
+			fileNames = []string{}
+		}
+
 		// Create a buffer to store the multipart form data
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
 
-		// Append all fields using reflection
+		// Append all fields using reflection for the specifc JSON instance
 		appendFields(writer, instance)
 
-		// Simulate file uploads with empty file buffers
-		files := []string{"vens.csv", "processes.csv", "traffic.csv", "wklds.csv", "iplists.csv", "svcs.csv",
-			"svcs_meta.csv", "labeldimensions.csv", "labels.csv", "rulesets.csv", "rules.csv",
-			"denyrules.csv", "adgroups.csv"}
+		//Simulate file uploads with empty file buffers
+		for _, fileName := range fileNames {
 
-		for _, fileName := range files {
+			//following will create http requestform for files to upload
 			fileWriter, err := writer.CreateFormFile(fileName, fileName)
 			if err != nil {
 				fmt.Println("Error creating form file:", err)
 				return
 			}
 			// Writing an empty file as a placeholder
-			_, _ = io.Copy(fileWriter, bytes.NewBuffer([]byte{}))
+			if dirPath != "" {
+				file, err := os.Open(dirPath + fileName)
+				if err != nil {
+					fmt.Println("Error opening file:", err)
+					return
+				}
+				defer file.Close()
+				_, _ = io.Copy(fileWriter, file)
+			} else {
+				_, _ = io.Copy(fileWriter, bytes.NewBuffer([]byte{}))
+			}
 		}
 
 		// Close the multipart writer to set the final boundary
@@ -119,6 +176,41 @@ func prepareInstance(url string, instances []LabInstance) {
 
 }
 
+// getFiles returns a list of files in a directory to be used to upload to VaaS
+func getFiles(dirPath string, requiredFiles []string) []string {
+
+	// Create a map for quick lookup of required filenames
+	requiredFileMap := make(map[string]bool)
+	for _, fileName := range requiredFiles {
+		requiredFileMap[fileName] = true
+	}
+
+	// Slice to store matching files
+	matchingFiles := []string{}
+
+	// Walk through the directory
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Printf("Error accessing path %s: %v\n", path, err)
+			return nil
+		}
+
+		// Check if the file matches one of the required filenames
+		if !info.IsDir() && requiredFileMap[info.Name()] {
+			fmt.Printf("Found matching file: %s\n", info.Name())
+			matchingFiles = append(matchingFiles, info.Name())
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Error walking the directory: %v\n", err)
+	}
+
+	return matchingFiles
+}
+
+// createInstance creates new instance(s) on VaaS using the data in the Json file provided
 func createInstance(jsonFilePath string) {
 	url := VAASURL + "/create"
 
@@ -131,12 +223,13 @@ func createInstance(jsonFilePath string) {
 	defer file.Close()
 
 	var instances []LabInstance
-	byteValue, _ := ioutil.ReadAll(file)
+	byteValue, _ := io.ReadAll(file)
 	json.Unmarshal(byteValue, &instances)
 	prepareInstance(url, instances)
 
 }
 
+// deleteInstance deletes instance(s) on VaaS using the data in the Json file provided
 func deleteInstance(jsonFilePath string) {
 	url := VAASURL + "/delete"
 
@@ -149,12 +242,13 @@ func deleteInstance(jsonFilePath string) {
 	defer file.Close()
 
 	var instances []LabInstance
-	byteValue, _ := ioutil.ReadAll(file)
+	byteValue, _ := io.ReadAll(file)
 	json.Unmarshal(byteValue, &instances)
 	prepareInstance(url, instances)
 
 }
 
+// appendFields appends fields to the multipart form data for VaaS
 func appendFields(writer *multipart.Writer, instance LabInstance) {
 	v := reflect.ValueOf(instance)
 	typeOfInstance := v.Type()
