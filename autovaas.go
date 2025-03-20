@@ -36,7 +36,7 @@ type LabInstance struct {
 }
 
 var dirPath string
-var clean bool = false
+var clear bool = false
 
 func main() {
 	if len(os.Args) < 2 {
@@ -72,13 +72,13 @@ func main() {
 		jsonFilePath := os.Args[2]
 		deleteInstance(jsonFilePath)
 		//clean will first delete the VaaS instance and then re-add using empty files to clean all existing data off the PCE
-	case "clean":
+	case "clear":
 		if len(os.Args) < 3 {
-			fmt.Println("Usage: autovaas clean <path to JSON file>")
+			fmt.Println("Usage: autovaas clear <path to JSON file>")
 			return
 		}
 		jsonFilePath := os.Args[2]
-		clean = true
+		clear = true
 		//This removes the instance on VaaS and re-adds with empty files.
 		deleteInstance(jsonFilePath)
 		createInstance(jsonFilePath)
@@ -102,7 +102,7 @@ func prepareInstance(url string, instances []LabInstance) {
 		}
 
 		//If clean is false and no --dir then send no files which causes VaaS to use default file.
-		if !clean && dirPath == "" {
+		if !clear && dirPath == "" {
 			fileNames = []string{}
 		}
 

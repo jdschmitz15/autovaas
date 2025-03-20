@@ -15,7 +15,8 @@
       "org": "3998809",
       "login_server": "",
       "clear_existing": "true"
-    },{
+    },
+    {
       "instance_name": "East",
       "owner_first_name": "Jeff",
       "owner_last_name": "Schmitz",
