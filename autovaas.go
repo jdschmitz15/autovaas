@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const VAASURL = "https://vaas.poc.segmentationpov.com"
@@ -171,7 +172,7 @@ func prepareInstance(url string, instances []LabInstance) {
 		} else {
 			fmt.Printf("Could not perform operation. Check if instance - %s exists.\n", instance.InstanceName)
 		}
-
+		time.Sleep(2 * time.Second)
 	}
 
 }
